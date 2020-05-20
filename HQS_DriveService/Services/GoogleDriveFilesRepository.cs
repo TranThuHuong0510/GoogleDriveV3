@@ -54,8 +54,7 @@ namespace HQS_DriveService.Services
             //get Credentials from client_secret.json file 
             // UserCredential credential;
             
-
-            var credentialFilePath = Environment.GetEnvironmentVariable("CREDENTIAL_FILE_PATH");
+            var credentialFilePath = Path.Combine(HttpContext.Current.Server.MapPath("~/Key/"), "speedy-realm-client-secret.p12");
 
             var certificate = new X509Certificate2(credentialFilePath, "notasecret", X509KeyStorageFlags.Exportable);
 
