@@ -11,6 +11,7 @@ using System.IO;
 using System.Threading;
 using HQS_DriveService.Models;
 using System.Threading.Tasks;
+using System.Security.Cryptography.X509Certificates;
 
 namespace HQS_DriveService.Services
 {
@@ -20,30 +21,87 @@ namespace HQS_DriveService.Services
         public static string[] Scopes = { DriveService.Scope.Drive };
 
         //create Drive API service.
+        //public static DriveService GetService()
+        //{
+        //    //get Credentials from client_secret.json file 
+        //    UserCredential credential;
+        //    var credentialFilePath = Path.Combine(HttpContext.Current.Server.MapPath("~/"), "client_secret.json");
+        //    using (var stream = new FileStream(credentialFilePath, FileMode.Open, FileAccess.Read))
+        //    {
+        //        var filePath = Path.Combine(HttpContext.Current.Server.MapPath("~/"), "DriveServiceCredentials.json");
+
+        //        credential = GoogleWebAuthorizationBroker.AuthorizeAsync(
+        //            GoogleClientSecrets.Load(stream).Secrets,
+        //            Scopes,
+        //            "user",
+        //            CancellationToken.None,
+        //            new FileDataStore(filePath, true)).Result;
+        //    }
+
+        //    //create Drive API service.
+        //    DriveService service = new DriveService(new BaseClientService.Initializer()
+        //    {
+        //        HttpClientInitializer = credential,
+        //        ApplicationName = "GoogleDriveRestAPI-v3",
+        //    });
+        //    return service;
+        //}
+
+
+
         public static DriveService GetService()
         {
             //get Credentials from client_secret.json file 
-            UserCredential credential;
-            var credentialFilePath = Path.Combine(HttpContext.Current.Server.MapPath("~/"), "client_secret.json");
-            using (var stream = new FileStream(credentialFilePath, FileMode.Open, FileAccess.Read))
-            {
-                var filePath = Path.Combine(HttpContext.Current.Server.MapPath("~/"), "DriveServiceCredentials.json");
+            // UserCredential credential;
+            
 
-                credential = GoogleWebAuthorizationBroker.AuthorizeAsync(
-                    GoogleClientSecrets.Load(stream).Secrets,
-                    Scopes,
-                    "user",
-                    CancellationToken.None,
-                    new FileDataStore(filePath, true)).Result;
+            var credentialFilePath = Environment.GetEnvironmentVariable("CREDENTIAL_FILE_PATH");
+
+            var certificate = new X509Certificate2(credentialFilePath, "notasecret", X509KeyStorageFlags.Exportable);
+
+            string serviceAccountEmail = Environment.GetEnvironmentVariable("SERVICE_ACCOUNT_EMAIL");
+
+            try
+            {
+                var credential = new ServiceAccountCredential(
+                    new ServiceAccountCredential.Initializer(serviceAccountEmail)
+                    {
+                        Scopes = Scopes
+                    }.FromCertificate(certificate));
+
+
+                //create Drive API service.
+                var service = new DriveService(new BaseClientService.Initializer()
+                {
+                    HttpClientInitializer = credential,
+                    ApplicationName = "GoogleDriveRestAPI-v3",
+                });
+                return service;
+            }
+            catch (Exception)
+            {
+                return null;
             }
 
-            //create Drive API service.
-            DriveService service = new DriveService(new BaseClientService.Initializer()
-            {
-                HttpClientInitializer = credential,
-                ApplicationName = "GoogleDriveRestAPI-v3",
-            });
-            return service;
+            //using (var stream = new FileStream(credentialFilePath, FileMode.Open, FileAccess.Read))
+            //{
+            //    var filePath = Path.Combine(HttpContext.Current.Server.MapPath("~/"), "DriveServiceCredentials.json");
+
+            //    credential = GoogleWebAuthorizationBroker.AuthorizeAsync(
+            //        GoogleClientSecrets.Load(stream).Secrets,
+            //        Scopes,
+            //        "user",
+            //        CancellationToken.None,
+            //        new FileDataStore(filePath, true)).Result;
+            //}
+
+            ////create Drive API service.
+            //DriveService service = new DriveService(new BaseClientService.Initializer()
+            //{
+            //    HttpClientInitializer = credential,
+            //    ApplicationName = "GoogleDriveRestAPI-v3",
+           // });
+           
         }
 
         //file Upload to the Google Drive.

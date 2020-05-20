@@ -32,11 +32,12 @@ namespace HQS_DriveService.Controller
                     //foreach (string fileName in httpRequest.Files.Keys)
                     //{
                         var file = httpRequest.Files[fileName];
-                        var result = await GoogleDriveFilesRepository.FileUploadAsync(file);
+                    var defaultFolderId = Environment.GetEnvironmentVariable("DEFAULT_FOLDER");
+                        var result = await GoogleDriveFilesRepository.FileUploadInFolder(defaultFolderId, file);
                     if (result != null)
                     {
                         var x = GoogleDriveFilesRepository.FileSharingPermission(result.ToString());
-                        if (x) return Ok("https://drive.google.com/open?id=" + result);
+                        if (x) return Ok(result);
                         return null;
                     }
                     // }
@@ -86,7 +87,7 @@ namespace HQS_DriveService.Controller
                     if(result != null)
                     {
                         var x = GoogleDriveFilesRepository.FileSharingPermission(result);
-                        if (x) return Ok("https://drive.google.com/open?id=" + result);
+                        if (x) return Ok(result);
                         return null;
                     }
                     // }
